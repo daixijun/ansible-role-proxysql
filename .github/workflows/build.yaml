@@ -27,7 +27,7 @@ jobs:
       - name: Test with molecule
         run: |
           cd ..
-          mv ansible-role-proxysql daixijun.proxysql
+          cp -rf ansible-role-proxysql daixijun.proxysql
           cd daixijun.proxysql
           molecule test
       - name: Create Release
