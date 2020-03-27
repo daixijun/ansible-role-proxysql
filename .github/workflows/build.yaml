@@ -1,0 +1,30 @@
+---
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:dind
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Setup Python version
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.7"
+          architecture: "x64"
+      - name: Test with molecule
+        run: |
+          pip install ansible "molecule[docker,lint]"
+          cd ..
+          mv ansible-role-mysql daixijun.mysql
+          cd daixijun.mysql
+          molecule test
+      - name: Create Release
+        uses: softprops/action-gh-release@latest
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
