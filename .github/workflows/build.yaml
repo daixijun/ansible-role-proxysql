@@ -30,6 +30,7 @@ jobs:
           mv ansible-role-proxysql daixijun.proxysql
           cd daixijun.proxysql
           molecule test
+          cd ..
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
