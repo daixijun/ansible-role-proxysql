@@ -1,0 +1,12 @@
+{{ proxysql_errorlog | dirname }}/*.log {
+    notifempty
+    copytruncate
+    daily
+    rotate 5
+    missingok
+    compress
+    create 600 proxysql proxysql
+    postrotate
+        /usr/bin/kill -HUP `cat {{ proxysql_datadir }}/proxysql.pid`
+    endscript
+}

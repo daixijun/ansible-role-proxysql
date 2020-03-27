@@ -1,0 +1,234 @@
+# {{ ansible_managed }}
+# file proxysql.cfg
+
+########################################################################################
+# This config file is parsed using libconfig , and its grammar is described in:
+# http://www.hyperrealm.com/libconfig/libconfig_manual.html#Configuration-File-Grammar
+# Grammar is also copied at the end of this file
+########################################################################################
+
+########################################################################################
+# IMPORTANT INFORMATION REGARDING THIS CONFIGURATION FILE:
+########################################################################################
+# On startup, ProxySQL reads its config file (if present) to determine its datadir.
+# What happens next depends on if the database file (disk) is present in the defined
+# datadir (i.e. "/var/lib/proxysql/proxysql.db").
+#
+# If the database file is found, ProxySQL initializes its in-memory configuration from
+# the persisted on-disk database. So, disk configuration gets loaded into memory and
+# then propagated towards the runtime configuration.
+#
+# If the database file is not found and a config file exists, the config file is parsed
+# and its content is loaded into the in-memory database, to then be both saved on-disk
+# database and loaded at runtime.
+#
+# IMPORTANT: If a database file is found, the config file is NOT parsed. In this case
+#            ProxySQL initializes its in-memory configuration from the persisted on-disk
+#            database ONLY. In other words, the configuration found in the proxysql.cnf
+#            file is only used to initial the on-disk database read on the first startup.
+#
+# In order to FORCE a re-initialise of the on-disk database from the configuration file
+# the ProxySQL service should be started with "service proxysql initial".
+#
+########################################################################################
+
+datadir="{{ proxysql_datadir }}"
+errorlog="{{ proxysql_errorlog }}"
+
+admin_variables=
+{
+    admin_credentials="{{ proxysql_admin_username }}:{{ proxysql_admin_password }};{{ proxysql_cluster_username }}:{{ proxysql_cluster_password }}"
+    mysql_ifaces="0.0.0.0:6032"
+    refresh_interval=2000
+    # debug=true
+    web_enabled=true
+    web_port=6080
+    cluster_username="{{ proxysql_cluster_username }}"
+    cluster_password="{{ proxysql_cluster_password }}"
+    cluster_check_interval_ms=200
+    cluster_check_status_frequency=10
+    cluster_mysql_query_rules_save_to_disk=true
+    cluster_mysql_servers_save_to_disk=true
+    cluster_mysql_users_save_to_disk=true
+    cluster_proxysql_servers_save_to_disk=true
+    cluster_mysql_query_rules_diffs_before_sync=3
+    cluster_mysql_servers_diffs_before_sync=3
+    cluster_mysql_users_diffs_before_sync=3
+    cluster_proxysql_servers_diffs_before_sync=3
+    checksum_mysql_query_rules=true
+    checksum_mysql_servers=true
+    checksum_mysql_users=true
+    hash_passwords=true
+}
+
+mysql_variables=
+{
+    # default_charset=utf8
+    have_ssl=true
+    threads=4
+    max_connections=2048
+    default_query_delay=0
+    default_query_timeout=36000000
+    have_compress=true
+    poll_timeout=2000
+    # interfaces="0.0.0.0:6033;/tmp/proxysql.sock"
+    interfaces="0.0.0.0:3306"
+    default_schema="information_schema"
+    stacksize=1048576
+    # server_version="8.0.17"
+    connect_timeout_server=3000
+    # make sure to configure monitor username and password
+    # https://github.com/sysown/proxysql/wiki/Global-variables#mysql-monitor_username-mysql-monitor_password
+    monitor_username="{{ proxysql_monitor_username }}"
+    monitor_password="{{ proxysql_monitor_password }}"
+    monitor_history=600000
+    monitor_connect_interval=60000
+    monitor_ping_interval=10000
+    monitor_read_only_interval=1500
+    monitor_read_only_timeout=500
+    ping_interval_server_msec=120000
+    ping_timeout_server=500
+    commands_stats=true
+    sessions_sort=true
+    connect_retries_on_failure=10
+    max_allowed_packet=16777216  # 16MB
+    default_sql_mode=""
+}
+
+proxysql_servers =
+(
+    {%- for server in ansible_play_hosts %}
+    {
+        hostname="{{ hostvars[server].ansible_default_ipv4.address }}"
+        port=6032
+        weight=50
+        comment="{{ server }}"
+    }{% if not loop.last %},{% endif -%}
+    {%- endfor %}
+)
+
+# defines all the MySQL servers
+mysql_servers =
+(
+{%- for server in proxysql_mysql_servers|default([]) %}
+    {
+        address = "{{ server.address }}"
+        port = {{ server.port | default(3306) }}
+        hostgroup = {{ server.hostgroup | default(20) }}
+        status = "{{ server.status | default('ONLINE') }}"
+        weight = {{ server.weight | default(1) }}
+        compression = {{ server.compression | default(0) }}
+        max_replication_lag = {{ server.max_replication_lag | default(10) }}
+        max_connections = {{ server.max_connections | default(1000) }}
+        max_latency_ms = {{ server.max_latency_ms | default(2000) }}
+        use_ssl = {{ server.use_ssl | default(0) }}
+        comment = "{{ server.comment | default('') }}"
+    }{% if not loop.last %},{% endif -%}
+{%- endfor %}
+)
+
+
+# defines all the MySQL users
+mysql_users:
+(
+{%- for user in proxysql_mysql_users|default([]) %}
+    {
+        username = "{{ user.username }}"
+        password = "{{ user.password | default('') }}"
+        default_hostgroup = {{ user.default_hostgroup | default(0) }}
+        max_connections = {{ user.max_connections |default(1000) }}
+        active = {{ user.active | default(1) }}
+        backend = {{ user.backend | default(1) }}
+        frontend = {{ user.frontend | default(1) }}
+        transaction_persistent = {{ user.transaction_persistent | default(1) }}
+        use_ssl = {{ user.use_ssl | default(0) }}
+    }{% if not loop.last %},{% endif %}
+{%- endfor %}
+)
+
+
+#defines MySQL Query Rules
+mysql_query_rules:
+(
+  {
+      rule_id=1
+      active=1
+      match_pattern="^SELECT .* FOR UPDATE$"
+      destination_hostgroup=10
+      apply=1
+  },
+  {
+      rule_id=2
+      active=1
+      match_pattern="^SELECT"
+      destination_hostgroup=20
+      apply=1
+  }
+)
+
+scheduler=
+(
+#  {
+#    id=1
+#    active=0
+#    interval_ms=10000
+#    filename="/var/lib/proxysql/proxysql_galera_checker.sh"
+#    arg1="0"
+#    arg2="0"
+#    arg3="0"
+#    arg4="1"
+#    arg5="/var/lib/proxysql/proxysql_galera_checker.log"
+#  }
+)
+
+mysql_group_replication_hostgroups=
+(
+    {
+        writer_hostgroup = 10
+        reader_hostgroup = 20
+        backup_writer_hostgroup = 30
+        offline_hostgroup = 40
+        active = 1
+        max_writers = 1
+        writer_is_also_reader = 0
+        max_transactions_behind = 100
+        comment = "mysql group replication"
+    }
+)
+
+mysql_replication_hostgroups=
+(
+    {
+        writer_hostgroup=10
+        reader_hostgroup=20
+        comment="mysql master slave"
+    }
+)
+
+
+# http://www.hyperrealm.com/libconfig/libconfig_manual.html#Configuration-File-Grammar
+#
+# Below is the BNF grammar for configuration files. Comments and include directives are not part of the grammar, so they are not included here.
+#
+# configuration = setting-list | empty
+#
+# setting-list = setting | setting-list setting
+#
+# setting = name (":" | "=") value (";" | "," | empty)
+#
+# value = scalar-value | array | list | group
+#
+# value-list = value | value-list "," value
+#
+# scalar-value = boolean | integer | integer64 | hex | hex64 | float
+#                | string
+#
+# scalar-value-list = scalar-value | scalar-value-list "," scalar-value
+#
+# array = "[" (scalar-value-list | empty) "]"
+#
+# list = "(" (value-list | empty) ")"
+#
+# group = "{" (setting-list | empty) "}"
+#
+# empty =

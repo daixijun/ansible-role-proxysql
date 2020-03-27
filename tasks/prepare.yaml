@@ -1,0 +1,16 @@
+- name: Verify proxysql version
+  fail:
+    msg: "proxysql_version must greater 2.0, got {{ proxysql_version }}"
+  when: proxysql_version is version("2.0", operator="<", strict=True)
+
+- name: Get the installed version
+  yum:
+    list: proxysql
+  register: _proxysql_installed_status
+
+- name: Verify that proxysql_version is greater than or equal to the installed version
+  fail:
+    msg: "proxysql_version must greater or equal to the installed version {{ _proxysql_installed_status.results[0].version }}, got {{ proxysql_version }}"
+  when:
+    - _proxysql_installed_status.results|length > 0
+    - proxysql_version is version(_proxysql_installed_status.results[0].version, operator="<", strict=True)

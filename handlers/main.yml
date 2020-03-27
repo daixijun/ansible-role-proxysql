@@ -1,0 +1,7 @@
+---
+- name: restart proxysql
+  systemd:
+    name: proxysql
+    daemon_reload: yes
+    enabled: yes
+    state: restarted

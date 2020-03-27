@@ -1,0 +1,41 @@
+---
+proxysql_version: 2.0.10
+proxysql_download_url: https://github.com/sysown/proxysql/releases/download/v{{ proxysql_version }}/proxysql-{{ proxysql_version }}-1-centos7.x86_64.rpm
+proxysql_datadir: /var/lib/proxysql
+proxysql_errorlog: /var/log/proxysql/proxysql.log
+proxysql_admin_username: admin
+proxysql_admin_password: admin
+proxysql_monitor_username: monitor
+proxysql_monitor_password: monitor
+proxysql_cluster_username: cluster
+proxysql_cluster_password: cluster
+proxysql_mysql_servers:
+  []
+  # - address: 127.0.0.1
+  #   port: 3306
+  #   hostgroup: 0
+  #   hosts: ONLINE
+  #   weight: 1
+  #   compression: 0
+  #   max_replication_lag: 0
+proxysql_mysql_users:
+  []
+  # - username: username
+  #   password: password
+  #   default_hostgroup: 0
+  #   active: 1
+  #   max_connections: 1000
+# proxysql_replication_hostgroups:
+#   []
+# - reader_hostgroup: 10
+#   writer_hostgroup: 20
+# proxysql_mysql_group_replication_hostgroups:
+#   []
+# - writer_hostgroup: 1
+#   reader_hostgroup: 2
+#   backup_writer_hostgroup: 3
+#   offline_hostgroup: 4
+#   active: 1
+#   max_writers: 1
+#   writer_is_also_reader: 0
+#   max_transactions_behind: 100

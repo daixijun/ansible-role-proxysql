@@ -1,0 +1,58 @@
+---
+- name: Prepare check
+  include_tasks: prepare.yaml
+
+- name: Download proxysql installation package
+  get_url:
+    url: "{{ proxysql_download_url }}"
+    dest: "{{ role_path }}/files/{{ proxysql_download_url | basename }}"
+  delegate_to: localhost
+  become: false
+  when:
+    - not _proxysql_installed_status.results or proxysql_version is version(_proxysql_installed_status.results[0].version, operator=">=", strict=True)
+
+- name: Upload the installation to the target machine
+  copy:
+    src: files/proxysql-2.0.10-1-centos7.x86_64.rpm
+    dest: /usr/local/src/proxysql-2.0.10-1-centos7.x86_64.rpm
+
+- name: Install proxysql
+  yum:
+    name:
+      - python2-PyMySQL
+      - /usr/local/src/proxysql-2.0.10-1-centos7.x86_64.rpm
+    state: present
+
+- name: Ensure directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: proxysql
+    group: proxysql
+  loop:
+    - "{{ proxysql_datadir }}"
+    - "{{ proxysql_errorlog | dirname }}"
+
+- name: Generate proxysql.cnf
+  template:
+    src: proxysql.cnf.j2
+    dest: /etc/proxysql.cnf
+    trim_blocks: false
+    owner: proxysql
+    group: proxysql
+    mode: 0600
+  notify:
+    - restart proxysql
+
+- name: Generate logrotate config
+  template:
+    src: proxysql.logrotate.j2
+    dest: /etc/logrotate.d/proxysql
+    owner: proxysql
+    group: proxysql
+    mode: 0640
+
+- name: Startup for systemd
+  template:
+    src: proxysql.service.j2
+    dest: /etc/systemd/system/proxysql.service

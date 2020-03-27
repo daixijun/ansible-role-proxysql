@@ -1,0 +1,32 @@
+---
+dist: xenial
+language: python
+cache: pip
+services:
+  - docker
+matrix:
+  fast_finish: true
+python: "3.7"
+env:
+  - MOLECULE_PLAYBOOK=converge.yml SCENARIO_NAME=default
+
+before_script:
+  - cd ../
+  - mv ansible-role-proxysql daixijun.proxysql
+  - cd daixijun.proxysql
+
+install:
+  - pip install "molecule[lint,docker]"
+
+script:
+  - MOLECULE_PLAYBOOK=${MOLECULE_PLAYBOOK} molecule test --scenario-name=${SCENARIO_NAME}
+
+notifications:
+  email: false
+  webhooks:
+    on_success: always
+    on_failure: never
+    on_cancel: never
+    on_error: never
+    urls:
+      - https://galaxy.ansible.com/api/v1/notifications/

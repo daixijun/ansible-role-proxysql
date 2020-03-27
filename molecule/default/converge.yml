@@ -1,0 +1,26 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: daixijun.proxysql
+      proxysql_version: 2.0.10
+      proxysql_mysql_users:
+        - username: monitor
+          password: monitor
+        - username: proxysql
+          password: proxysql
+          use_ssl: 1
+          default_hostgroup: 10
+      proxysql_mysql_servers:
+        - address: 172.17.0.3
+          hostgroup: 10
+          comment: mgr1
+          use_ssl: 1
+        - address: 172.17.0.4
+          hostgroup: 30
+          comment: mgr2
+          use_ssl: 1
+        - address: 172.17.0.5
+          hostgroup: 30
+          comment: mgr3
+          use_ssl: 1
