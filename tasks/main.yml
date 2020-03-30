@@ -7,6 +7,7 @@
     url: "{{ proxysql_download_url }}"
     dest: "{{ role_path }}/files/{{ proxysql_download_url | basename }}"
   delegate_to: localhost
+  run_once: true
   become: false
   when:
     - not _proxysql_installed_status.results or proxysql_version is version(_proxysql_installed_status.results[0].version, operator=">=", strict=True)
