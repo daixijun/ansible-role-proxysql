@@ -5,7 +5,7 @@
 - name: Download proxysql installation package
   get_url:
     url: "{{ proxysql_download_url }}"
-    dest: "{{ role_path }}/files/{{ proxysql_download_url | basename }}"
+    dest: "{{ playbook_dir }}/files/{{ proxysql_download_url | basename }}"
   delegate_to: localhost
   run_once: true
   become: false
@@ -19,10 +19,12 @@
 
 - name: Install proxysql
   yum:
-    name:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
       - python2-PyMySQL
       - /usr/local/src/proxysql-2.0.10-1-centos7.x86_64.rpm
-    state: present
 
 - name: Ensure directories
   file:
