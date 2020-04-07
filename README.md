@@ -1,7 +1,7 @@
 daixijun.proxysql
 =========
 
-[![Build Status](https://github.com/daixijun/ansible-role-proxysql/workflows/ci/badge.svg)](https://github.com/daixijun/ansible-role-proxysql/actions)
+[![Build Status](https://github.com/daixijun/ansible-role-proxysql/workflows/CI/badge.svg)](https://github.com/daixijun/ansible-role-proxysql/actions)
 [![Ansible Galaxy](https://img.shields.io/badge/galaxy-daixijun.proxysql-660198.svg?style=flat)](https://galaxy.ansible.com/daixijun/proxysql/)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/daixijun/ansible-role-proxysql?sort=semver)](https://github.com/daixijun/ansible-role-proxysql/tags)
 
