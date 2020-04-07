@@ -12,15 +12,15 @@
           use_ssl: 1
           default_hostgroup: 10
       proxysql_mysql_servers:
-        - address: 172.17.0.3
+        - address: 172.17.0.2
           hostgroup: 10
           comment: mgr1
           use_ssl: 1
-        - address: 172.17.0.4
-          hostgroup: 30
+        - address: 172.17.0.3
+          hostgroup: 10
           comment: mgr2
           use_ssl: 1
-        - address: 172.17.0.5
-          hostgroup: 30
+        - address: 172.17.0.4
+          hostgroup: 10
           comment: mgr3
           use_ssl: 1
