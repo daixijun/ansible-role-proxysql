@@ -1,10 +1,13 @@
 ---
-name: CI
+name: build
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [centos7, centos8]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
@@ -25,9 +28,11 @@ jobs:
           pip --version
           pip install ansible "molecule[docker,lint]"
       - name: Test with molecule
+        env:
+          MOLECULE_DISTRO: ${{ matrix.os }}
         run: |
           cd ..
-          cp -rf ansible-role-proxysql daixijun.proxysql
+          ln -sf ansible-role-proxysql daixijun.proxysql
           cd daixijun.proxysql
           molecule test
       - name: Publish role to Galaxy
