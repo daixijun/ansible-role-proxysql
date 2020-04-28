@@ -14,8 +14,8 @@
 
 - name: Upload the installation to the target machine
   copy:
-    src: files/proxysql-{{ proxysql_version }}-1-centos{{ ansible_distribution_major_version }}.x86_64.rpm
-    dest: /usr/local/src/proxysql-{{ proxysql_version }}-1-centos{{ ansible_distribution_major_version }}.x86_64.rpm
+    src: files/{{ proxysql_download_url | basename }}
+    dest: /usr/local/src/{{ proxysql_download_url | basename }}
 
 - name: Install proxysql
   yum:
@@ -23,8 +23,8 @@
     state: present
   vars:
     packages:
-      - python2-PyMySQL
-      - /usr/local/src/proxysql-{{ proxysql_version }}-1-centos{{ ansible_distribution_major_version }}.x86_64.rpm
+      - "{{ 'python3-PyMySQL' if ansible_distribution_major_version >= '8' else 'python2-PyMySQL' }}"
+      - /usr/local/src/{{ proxysql_download_url | basename }}
 
 - name: Ensure directories
   file:
