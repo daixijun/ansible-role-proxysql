@@ -1,0 +1,19 @@
+---
+- name: Cleanup
+  hosts: localhost
+  gather_facts: False
+  become: False
+  tasks:
+    - name: Find need to delete pakcages
+      find:
+        paths: "{{ playbook_dir }}/files/"
+        file_type: file
+        use_regex: false
+        excludes: ".gitkeep"
+      register: need_to_delete
+
+    - name: Remove pacakges
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ need_to_delete.files }}"
